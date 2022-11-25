@@ -15,8 +15,8 @@ mail = Mail(app)
 # configuration of mail
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = "ashwindev1462001@gmail.com" 
-app.config['MAIL_PASSWORD'] = "ntmquaqeniemojyk" 
+app.config['MAIL_USERNAME'] = "rithikabyna@gmail.com" 
+app.config['MAIL_PASSWORD'] = "feraengbyfbsnqic" 
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
@@ -25,16 +25,16 @@ mail = Mail(app)
 
 
 
-conn = ibm_db.connect("DATABASE=bludb;HOSTNAME=824dfd4d-99de-440d-9991-629c01b3832d.bs2io90l08kqb1od8lcg.databases.appdomain.cloud;PORT=30119;SECURITY=SSL;SSLServerCertificate=DigiCertGlobalRootCA.crt;UID=kpr74378;PWD=0ijMNdNTAeNHpl5E",'','')
+conn = ibm_db.connect("DATABASE=bludb;HOSTNAME=764264db-9824-4b7c-82df-40d1b13897c2.bs2io90l08kqb1od8lcg.databases.appdomain.cloud;PORT=32536;SECURITY=SSL;SSLServerCertificate=DigiCertGlobalRootCA.crt;UID=dkh61031;PWD=epbaJyxx5Cfi7vTl",'','')
 
 app.secret_key='a'
 
 
-def send_mail(recipient_mail):
+def send_mail():
   msg = Message(
             'Expense tracker',
-            sender ='ashwindev1462001@gmail.com',
-            recipients = [recipient_mail]
+            sender ='rithikabyna@gmail.com',
+            recipients = ['byna19127.cs@rmkec.ac.in']
             )
   msg.body = 'Your Expense Limit has Exceeded'
   mail.send(msg)
@@ -65,32 +65,6 @@ def login():
 @app.route('/addExpense')
 def addExpense():
     return render_template('AddExpense.html')
-
-#for mail 
-'''
-@app.route('/send_mail', methods=['GET', 'POST'])
-def send_mail():
-    print("method")
-    print(request.method)
-    if request.method == 'POST':
-        
-      print("post method activated")
-      print(request.form)
-      recipient = request.form['recipient']
-      print(recipient)
-      msg = Message('Twilio SendGrid Test Email', recipients=[recipient])
-      msg.body = ('Congratulations! You have sent a test email with '
-                  'Twilio SendGrid!')
-      msg.html = ('<h1>Twilio SendGrid Test Email</h1>'
-                  '<p>Congratulations! You have sent a test email with '
-                  '<b>Twilio SendGrid</b>!</p>')
-      mail.send(msg)
-      flash(f'A test message was sent to {recipient}.')
-      #return redirect(url_for('index'))
-    return render_template('home.html')
-
-#end for mail
-'''
 
 
 @app.route('/addrec',methods = ['POST', 'GET'])
@@ -171,13 +145,10 @@ def add():
       category=request.form['expenseCategory']
       paymethod=request.form['payMethod']
       id=session['id']
-      print("session id",id)
-
-
       
 
 
-      insert_sql = "INSERT INTO EXPENSES (USERID,DATE,NAME,AMOUNT,CATEGORY,PAYMENTMETHOD) VALUES (?,?,?,?,?,?)"
+      insert_sql = "INSERT INTO EXPENSE (USERID,DATE,NAME,AMOUNT,CATEGORY,PAYMENTMETHOD) VALUES (?,?,?,?,?,?)"
       prep_stmt = ibm_db.prepare(conn, insert_sql)
       ibm_db.bind_param(prep_stmt, 1, id)
       ibm_db.bind_param(prep_stmt, 2, date )
@@ -196,36 +167,17 @@ def add():
       limit_amount=account['AMOUNT']
       print(limit_amount)
 
-      total="SELECT SUM(AMOUNT) FROM EXPENSES WHERE USERID=?"
+      total="SELECT SUM(AMOUNT) FROM EXPENSE WHERE USERID=?"
       stmt = ibm_db.prepare(conn, total)
       ibm_db.bind_param(stmt,1,id)
       ibm_db.execute(stmt)
       account= ibm_db.fetch_assoc(stmt)
-
-      print("account")
-      print( account)
-
-      print("account id")
-      print(id)
-      total_amount=account['1']
-      print("total_amount")
+      total_amount=account[str(id)]
       print(total_amount)
 
-      if (int(total_amount)>int(limit_amount)):
-        print("Limit exceeded")
-        account_stmt="SELECT EMAIL FROM USERS WHERE USERID=?"
-        stmt = ibm_db.prepare(conn, account_stmt)
-        ibm_db.bind_param(stmt,1,id)
-        ibm_db.execute(stmt)
-        account = ibm_db.fetch_assoc(stmt)
-        print(account)
-
-        send_mail(account['EMAIL'])
+      if total_amount>limit_amount:
+        send_mail()
         return render_template("limitwarn.html")
-      else:
-        print(total_amount, limit_amount)
-    return render_template('AddExpense.html')
-      
             
 
 
@@ -241,7 +193,7 @@ def history():
   print(session['username'])
   students = []
   total=0
-  sql = "SELECT * FROM EXPENSES where USERID=?"
+  sql = "SELECT * FROM EXPENSE where USERID=?"
   stmt = ibm_db.prepare(conn, sql)
   ibm_db.bind_param(stmt,1,id)
   ibm_db.execute(stmt)
@@ -296,7 +248,7 @@ def logout():
 def today():
       
       
-      sql = "SELECT * FROM EXPENSES  WHERE userid =? AND date = DATE(NOW())"
+      sql = "SELECT * FROM EXPENSE  WHERE userid =? AND date = DATE(NOW())"
       stmt = ibm_db.prepare(conn, sql)
       ibm_db.bind_param(stmt,1,session['id'])
       ibm_db.execute(stmt)
@@ -306,7 +258,7 @@ def today():
       
       
 
-      sql = "SELECT * FROM EXPENSES WHERE USERID=? AND DATE(date) = DATE(NOW())"
+      sql = "SELECT * FROM EXPENSE WHERE USERID=? AND DATE(date) = DATE(NOW())"
       stmt = ibm_db.prepare(conn, sql)
       ibm_db.bind_param(stmt,1,session['id'])
       ibm_db.execute(stmt)
@@ -358,7 +310,7 @@ def today():
 
 @app.route("/month")
 def month():
-      sql = "SELECT MONTHNAME(DATE),SUM(AMOUNT) FROM EXPENSES WHERE USERID=? GROUP BY MONTHNAME(DATE)"
+      sql = "SELECT MONTHNAME(DATE),SUM(AMOUNT) FROM EXPENSE WHERE USERID=? GROUP BY MONTHNAME(DATE)"
       stmt = ibm_db.prepare(conn, sql)
       ibm_db.bind_param(stmt,1,session['id'])
       ibm_db.execute(stmt)
@@ -371,7 +323,7 @@ def month():
       
       
 
-      sql = "SELECT * FROM EXPENSES WHERE USERID=? AND MONTH(date)=MONTH(DATE(NOW()))"
+      sql = "SELECT * FROM EXPENSE WHERE USERID=? AND MONTH(date)=MONTH(DATE(NOW()))"
       stmt = ibm_db.prepare(conn, sql)
       ibm_db.bind_param(stmt,1,session['id'])
       ibm_db.execute(stmt)
@@ -432,7 +384,7 @@ def month():
 def year():
       
       
-      sql = "SELECT YEAR(DATE),SUM(AMOUNT) FROM EXPENSES WHERE USERID=? GROUP BY YEAR(DATE)"
+      sql = "SELECT YEAR(DATE),SUM(AMOUNT) FROM EXPENSE WHERE USERID=? GROUP BY YEAR(DATE)"
       stmt = ibm_db.prepare(conn, sql)
       ibm_db.bind_param(stmt,1,session['id'])
       ibm_db.execute(stmt)
@@ -446,7 +398,7 @@ def year():
 
       
 
-      sql = "SELECT * FROM EXPENSES WHERE USERID=? AND YEAR(date)=YEAR(DATE(NOW()))"
+      sql = "SELECT * FROM EXPENSE WHERE USERID=? AND YEAR(date)=YEAR(DATE(NOW()))"
       stmt = ibm_db.prepare(conn, sql)
       ibm_db.bind_param(stmt,1,session['id'])
       ibm_db.execute(stmt)
