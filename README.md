@@ -35,4 +35,4 @@ This Personal Expense Tracker Application tracks the daily expenses of its users
 
 
 ## Cloud Deployment Link
-
+<a href="http://169.51.206.221:31174/" target="_blank">http://169.51.206.221:31174/</a>
